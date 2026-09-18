@@ -35,7 +35,9 @@ final class PriceRuleRegistry
         $this->strategies[$type] = $class;
     }
 
-    /** @return class-string<PriceRule> */
+    /**
+     * @return class-string<ConfigurablePriceRule>
+     */
     public function classFor(string $type): string
     {
         if (! isset($this->strategies[$type])) {
