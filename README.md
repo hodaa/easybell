@@ -114,4 +114,5 @@ These are deliberate deferrals, not missing work — each is the right thing to 
 | HTTP endpoints | No controllers; the kata is a service-layer exercise. | Exposing the checkout over an API. |
 | Persistence / orders | No repositories or models. | Storing scan history or order receipts. |
 | Time-bound offers | An `active` offer is always valid — no start/end dates. | `valid_from` / `valid_to` on an offer so a promotion auto-expires. |
+| Structured logging | CLI echoes results to stdout; nothing persists. | The checkout runs unattended — HTTP API, queue job, scheduled run — where nobody is watching stdout and you need the audit trail. |
 

@@ -213,6 +213,20 @@ class CheckoutTest extends TestCase
         $registry->register('double', Multiprice::class);
     }
 
+    public function test_strategy_must_implement_price_rule(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        (new PriceRuleRegistry)->register('date', \DateTime::class);
+    }
+
+    public function test_strategy_class_must_exist(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        (new PriceRuleRegistry)->register('ghost', 'App\Services\Pricing\DoesNotExist');
+    }
+
     public function test_custom_strategy_can_be_registered(): void
     {
         $double = new class implements PriceRule

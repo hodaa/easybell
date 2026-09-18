@@ -28,6 +28,10 @@ final class PriceRuleRegistry
             throw new InvalidArgumentException("Pricing strategy [{$type}] is already registered");
         }
 
+        if (! is_a($class, PriceRule::class, true)) {
+            throw new InvalidArgumentException("Pricing strategy [{$type}] must implement ".PriceRule::class);
+        }
+
         $this->strategies[$type] = $class;
     }
 
