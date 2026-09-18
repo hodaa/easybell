@@ -25,10 +25,18 @@ final class PricingConfiguration
 
     private function activeOffer(string $item, array $definition): PriceRule
     {
-        $unit = $definition['unit'] ?? null;
+        $unit = $this->integer($definition['unit'] ?? null, "Item [{$item}] unit");
+
+        if (isset($definition['offers']) && ! is_array($definition['offers'])) {
+            throw new InvalidArgumentException("Item [{$item}] offers must be a list");
+        }
+
         $offers = array_values(array_filter(
-            $definition['offers'] ?? [],
-            fn ($offer) => $offer['active'] ?? false,
+            array_map(
+                fn (mixed $offer): array => $this->normalize($item, $offer),
+                $definition['offers'] ?? [],
+            ),
+            fn (array $offer): bool => $offer['active'] ?? false,
         ));
 
         if (count($offers) > 1) {
@@ -44,5 +52,42 @@ final class PricingConfiguration
         $offer['unit'] = $unit;
 
         return $this->factory->make($offer);
+    }
+
+    private function normalize(string $item, mixed $offer): array
+    {
+        if (! is_array($offer)) {
+            throw new InvalidArgumentException("Item [{$item}] offers must be arrays");
+        }
+
+        $type = $offer['type'] ?? null;
+        if (! is_string($type)) {
+            throw new InvalidArgumentException("Item [{$item}] offer type must be a string");
+        }
+
+        foreach (['unit', 'bundle_count', 'bundle_price'] as $field) {
+            if (array_key_exists($field, $offer)) {
+                $offer[$field] = $this->integer($offer[$field], "Item [{$item}] {$field}");
+            }
+        }
+
+        if (array_key_exists('active', $offer) && ! is_bool($offer['active'])) {
+            throw new InvalidArgumentException("Item [{$item}] active must be a boolean");
+        }
+
+        return $offer;
+    }
+
+    private function integer(mixed $value, string $label): int
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_string($value) && preg_match('/^-?\d+$/D', $value)) {
+            return (int) $value;
+        }
+
+        throw new InvalidArgumentException("{$label} must be an integer");
     }
 }

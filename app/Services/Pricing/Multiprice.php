@@ -20,7 +20,7 @@ final class Multiprice implements ConfigurablePriceRule
     {
         $type = $offer['type'] ?? 'offer';
 
-        foreach (['unit', 'bundle_count', 'bundle_price'] as $field) {
+        foreach (['bundle_count', 'bundle_price'] as $field) {
             if (! isset($offer[$field])) {
                 throw new InvalidArgumentException("{$type} pricing requires a {$field}");
             }

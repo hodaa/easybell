@@ -158,11 +158,81 @@ class CheckoutTest extends TestCase
         ]);
     }
 
-    public function test_flat_offer_requires_unit(): void
+    public function test_item_unit_must_be_an_integer(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
-        FlatPrice::fromConfig(['type' => 'flat']);
+        $this->configuration()->resolve([
+            'X' => ['unit' => 'fifty', 'offers' => []],
+        ]);
+    }
+
+    public function test_item_unit_is_required(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->configuration()->resolve(['X' => ['offers' => []]]);
+    }
+
+    public function test_offer_numeric_field_must_be_an_integer(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->configuration()->resolve([
+            'X' => ['unit' => 10, 'offers' => [
+                ['type' => 'multiprice', 'bundle_count' => 'two', 'bundle_price' => 20, 'active' => true],
+            ]],
+        ]);
+    }
+
+    public function test_numeric_strings_are_coerced_to_integers(): void
+    {
+        $checkout = new Checkout($this->configuration()->resolve([
+            'X' => ['unit' => '10', 'offers' => [
+                ['type' => 'multiprice', 'bundle_count' => '2', 'bundle_price' => '20', 'active' => true],
+            ]],
+        ]));
+
+        $checkout->scan('X');
+        $checkout->scan('X');
+
+        $this->assertSame(20, $checkout->total());
+    }
+
+    public function test_offer_type_must_be_a_string(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->configuration()->resolve([
+            'X' => ['unit' => 10, 'offers' => [
+                ['type' => ['not', 'a', 'string'], 'active' => true],
+            ]],
+        ]);
+    }
+
+    public function test_active_must_be_a_boolean(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->configuration()->resolve([
+            'X' => ['unit' => 10, 'offers' => [
+                ['type' => 'flat', 'active' => 'true'],
+            ]],
+        ]);
+    }
+
+    public function test_offers_must_be_a_list(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->configuration()->resolve(['X' => ['unit' => 10, 'offers' => 'nope']]);
+    }
+
+    public function test_offer_entries_must_be_arrays(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->configuration()->resolve(['X' => ['unit' => 10, 'offers' => ['flat']]]);
     }
 
     public function test_zero_bundle_count_is_rejected(): void

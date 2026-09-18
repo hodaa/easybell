@@ -119,3 +119,7 @@ These are deliberate deferrals, not missing work — each is the right thing to 
 | Time-bound offers | An `active` offer is always valid — no start/end dates. | `valid_from` / `valid_to` on an offer so a promotion auto-expires. |
 | Structured logging | CLI echoes results to stdout; nothing persists. | The checkout runs unattended — HTTP API, queue job, scheduled run — where nobody is watching stdout and you need the audit trail. |
 
+## AI assistance
+
+Developed with AI pairing: this codebase was written and reviewed with **opencode/big-pickle** (an OpenAI-compatible coding model) used through the opencode CLI.
+

@@ -19,7 +19,7 @@ final class BuyOneGetOne implements ConfigurablePriceRule
     {
         $type = $offer['type'] ?? 'offer';
 
-        foreach (['unit', 'bundle_count'] as $field) {
+        foreach (['bundle_count'] as $field) {
             if (! isset($offer[$field])) {
                 throw new InvalidArgumentException("{$type} pricing requires a {$field}");
             }
