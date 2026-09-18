@@ -197,6 +197,22 @@ class CheckoutTest extends TestCase
         ]);
     }
 
+    public function test_default_strategy_cannot_be_overridden_in_constructor(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        new PriceRuleRegistry(['flat' => FlatPrice::class]);
+    }
+
+    public function test_registered_strategy_cannot_be_replaced(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $registry = new PriceRuleRegistry;
+        $registry->register('double', FlatPrice::class);
+        $registry->register('double', Multiprice::class);
+    }
+
     public function test_custom_strategy_can_be_registered(): void
     {
         $double = new class implements PriceRule

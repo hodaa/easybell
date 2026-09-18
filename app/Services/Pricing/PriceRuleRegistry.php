@@ -11,15 +11,23 @@ final class PriceRuleRegistry
 
     public function __construct(array $strategies = [])
     {
-        $this->strategies = $strategies + [
+        $this->strategies = [
             'flat' => FlatPrice::class,
             'multiprice' => Multiprice::class,
             'buyonegetone' => BuyOneGetOne::class,
         ];
+
+        foreach ($strategies as $type => $class) {
+            $this->register($type, $class);
+        }
     }
 
     public function register(string $type, string $class): void
     {
+        if (isset($this->strategies[$type])) {
+            throw new InvalidArgumentException("Pricing strategy [{$type}] is already registered");
+        }
+
         $this->strategies[$type] = $class;
     }
 
