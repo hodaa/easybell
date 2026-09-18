@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Services\Checkout;
+use Closure;
 use Illuminate\Console\Command;
 use InvalidArgumentException;
 
@@ -12,11 +13,14 @@ final class CheckoutScan extends Command
 
     protected $description = 'Scan items through the checkout and print the running total';
 
-    /** @param  resource|null  $stdin */
+    private Closure $readLine;
+
     public function __construct(
         private Checkout $checkout,
-        private mixed $stdin = null,
+        ?Closure $readLine = null,
     ) {
+        $this->readLine = $readLine ?? static fn (): string|false => fgets(STDIN);
+
         parent::__construct();
     }
 
@@ -49,7 +53,7 @@ final class CheckoutScan extends Command
     {
         $this->info('Type letters to scan, a blank line to stop.');
 
-        while (($line = fgets($this->stdin ?? STDIN)) !== false) {
+        while (($line = ($this->readLine)()) !== false) {
             if (trim($line) === '') {
                 break;
             }
