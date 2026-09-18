@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Services\Checkout;
+use App\Services\Pricing\ConfigurablePriceRule;
 use App\Services\Pricing\FlatPrice;
 use App\Services\Pricing\PriceRule;
 use App\Services\Pricing\PriceRuleFactory;
@@ -181,18 +182,18 @@ class CheckoutTest extends TestCase
 
         $this->configuration()->resolve([
             'X' => ['unit' => 10, 'offers' => [
-                ['type' => 'buyonegetone', 'bundle_price' => 20, 'active' => true],
+                ['type' => 'buyonegetone', 'active' => true],
             ]],
         ]);
     }
 
-    public function test_zero_bundle_count_rejected_for_buyonegetone(): void
+    public function test_single_bundle_count_rejected_for_buyonegetone(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
         $this->configuration()->resolve([
             'X' => ['unit' => 10, 'offers' => [
-                ['type' => 'buyonegetone', 'bundle_count' => 0, 'bundle_price' => 20, 'active' => true],
+                ['type' => 'buyonegetone', 'bundle_count' => 1, 'active' => true],
             ]],
         ]);
     }
@@ -229,7 +230,7 @@ class CheckoutTest extends TestCase
 
     public function test_custom_strategy_can_be_registered(): void
     {
-        $double = new class implements PriceRule
+        $double = new class implements ConfigurablePriceRule
         {
             public static function fromConfig(array $offer): static
             {
@@ -253,5 +254,23 @@ class CheckoutTest extends TestCase
         $checkout->scan('X');
 
         $this->assertSame(4, $checkout->total());
+    }
+
+    public function test_checkout_depends_only_on_the_pricing_contract(): void
+    {
+        $nonConfigurable = new class implements PriceRule
+        {
+            public function calculatePrice(int $count): int
+            {
+                return $count * 7;
+            }
+        };
+
+        $checkout = new Checkout(['X' => $nonConfigurable]);
+
+        $checkout->scan('X');
+        $checkout->scan('X');
+
+        $this->assertSame(14, $checkout->total());
     }
 }

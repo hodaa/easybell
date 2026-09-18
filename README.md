@@ -42,12 +42,13 @@ Rules live in `config/checkout.php` — a price change is a config edit, not a c
     'unit' => 50,
     'offers' => [
         ['type' => 'multiprice', 'bundle_count' => 3, 'bundle_price' => 130, 'active' => false],
-        ['type' => 'buyonegetone', 'bundle_count' => 2, 'bundle_price' => 50, 'active' => true],
+        ['type' => 'buyonegetone', 'bundle_count' => 2, 'active' => true],
     ],
 ],
 ```
 
 - `type` maps to a `PriceRule` strategy (`multiprice`, `buyonegetone`, or the implicit `flat` fallback when no offer is active).
+- `buyonegetone` has no `bundle_price` — "buy one get one free" means each group of `bundle_count` items costs the unit price × `bundle_count - 1` (the free item is derived, never configured).
 - **At most one offer may be `active` per item** — `PricingConfiguration::resolve()` fails loudly on more than one, and falls back to the unit price when none is active.
 - `scan` only counts; all pricing math happens in `total()`, per SKU, from counts.
 - Unknown SKUs and invalid configuration throw `InvalidArgumentException` — never silently ignored.
@@ -60,7 +61,7 @@ Strict SOLID layering (see `AGENTS.md` for the full working contract):
 |---|---|---|
 | Command | `app/Console/Commands` | Composition root + CLI IO. Wires the pricing chain and calls `Checkout`. |
 | Service | `app/Services` | Business rules. `Checkout` owns scanning and totals. |
-| Pricing | `app/Services/Pricing` | Strategy pattern: `PriceRule` interface, one class per offer style, `PriceRuleRegistry` (type→class map), `PriceRuleFactory` (instantiation), `PricingConfiguration` (config→rules translation). |
+| Pricing | `app/Services/Pricing` | Strategy pattern: `PriceRule` interface (pricing contract), `ConfigurablePriceRule` for config-driven styles, one class per offer style, `PriceRuleRegistry` (type→class map), `PriceRuleFactory` (instantiation), `PricingConfiguration` (config→rules translation). |
 | Config | `config/checkout.php` | Tuneable business data. |
 
 Principles held:
@@ -68,11 +69,12 @@ Principles held:
 - **Composition boundary** — `Checkout` receives resolved `PriceRule` objects; it never reads config or instantiates rules.
 - **Open/closed** — adding a new offer style is a new `PriceRule` class plus one `register()` call in `PriceRuleRegistry`. Callers never change.
 - **Dependency inversion** — services depend on the `PriceRule` interface, never on concrete rules.
+- **Interface segregation** — `PriceRule` is the pricing contract only (`calculatePrice`). Config-driven styles add `ConfigurablePriceRule` (`fromConfig`), so a client that only prices — like a test double — never sees construction logic.
 - **Single responsibility** — commands handle IO only; pricing is pure math; `scan` counts, `total` prices.
 
 ### Adding a new offer style
 
-1. Implement `PriceRule` (`app/Services/Pricing`): a constructor accepting its config and `price(int $count): int`.
+1. Implement `ConfigurablePriceRule` (`app/Services/Pricing`): `fromConfig(array $offer)` (validate and construct) plus `calculatePrice(int $count): int`.
 2. Register it: `$registry->register('mystyle', MyStyle::class)` (defaults live in `PriceRuleRegistry::__construct`).
 3. Reference it in `config/checkout.php` — done. `Checkout` and the factory are untouched.
 

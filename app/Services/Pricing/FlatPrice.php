@@ -4,7 +4,7 @@ namespace App\Services\Pricing;
 
 use InvalidArgumentException;
 
-final class FlatPrice implements PriceRule
+final class FlatPrice implements ConfigurablePriceRule
 {
     public function __construct(
         private int $unit,

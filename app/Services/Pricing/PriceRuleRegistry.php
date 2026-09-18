@@ -6,7 +6,7 @@ use InvalidArgumentException;
 
 final class PriceRuleRegistry
 {
-    /** @var array<string, class-string<PriceRule>> */
+    /** @var array<string, class-string<ConfigurablePriceRule>> */
     private array $strategies;
 
     public function __construct(array $strategies = [])
@@ -28,8 +28,8 @@ final class PriceRuleRegistry
             throw new InvalidArgumentException("Pricing strategy [{$type}] is already registered");
         }
 
-        if (! is_a($class, PriceRule::class, true)) {
-            throw new InvalidArgumentException("Pricing strategy [{$type}] must implement ".PriceRule::class);
+        if (! is_a($class, ConfigurablePriceRule::class, true)) {
+            throw new InvalidArgumentException("Pricing strategy [{$type}] must implement ".ConfigurablePriceRule::class);
         }
 
         $this->strategies[$type] = $class;

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Console\Commands\CheckoutScan;
+use App\Services\Checkout;
 use Tests\TestCase;
 
 class CheckoutScanTest extends TestCase
@@ -27,7 +28,9 @@ class CheckoutScanTest extends TestCase
         fwrite($stream, "AA\nB\n\n");
         rewind($stream);
 
-        $this->app->instance(CheckoutScan::class, new CheckoutScan($stream));
+        $checkout = $this->app->make(Checkout::class);
+
+        $this->app->instance(CheckoutScan::class, new CheckoutScan($checkout, $stream));
 
         $this->artisan('checkout:scan')
             ->expectsOutputToContain('total: 50')
@@ -43,7 +46,9 @@ class CheckoutScanTest extends TestCase
         fwrite($stream, "Z\nB\n\n");
         rewind($stream);
 
-        $this->app->instance(CheckoutScan::class, new CheckoutScan($stream));
+        $checkout = $this->app->make(Checkout::class);
+
+        $this->app->instance(CheckoutScan::class, new CheckoutScan($checkout, $stream));
 
         $this->artisan('checkout:scan')
             ->expectsOutputToContain('Unknown item [Z]')

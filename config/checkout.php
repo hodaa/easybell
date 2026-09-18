@@ -7,7 +7,7 @@ return [
             'unit' => 50,
             'offers' => [
                 ['type' => 'multiprice', 'bundle_count' => 3, 'bundle_price' => 130, 'active' => false],
-                ['type' => 'buyonegetone', 'bundle_count' => 2, 'bundle_price' => 50, 'active' => true],
+                ['type' => 'buyonegetone', 'bundle_count' => 2, 'active' => true],
             ],
         ],
         'B' => [

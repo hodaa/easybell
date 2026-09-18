@@ -3,9 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Services\Checkout;
-use App\Services\Pricing\PriceRuleFactory;
-use App\Services\Pricing\PriceRuleRegistry;
-use App\Services\Pricing\PricingConfiguration;
 use Illuminate\Console\Command;
 use InvalidArgumentException;
 
@@ -16,17 +13,17 @@ final class CheckoutScan extends Command
     protected $description = 'Scan items through the checkout and print the running total';
 
     /** @param  resource|null  $stdin */
-    public function __construct(private mixed $stdin = null)
-    {
+    public function __construct(
+        private Checkout $checkout,
+        private mixed $stdin = null,
+    ) {
         parent::__construct();
     }
 
     public function handle(): int
     {
-        $checkout = $this->checkout();
-
         if ($this->argument('items') === []) {
-            $this->interactive($checkout);
+            $this->interactive();
 
             return self::SUCCESS;
         }
@@ -34,28 +31,21 @@ final class CheckoutScan extends Command
         foreach ($this->argument('items') as $token) {
             foreach (str_split($token) as $item) {
                 try {
-                    $checkout->scan($item);
+                    $this->checkout->scan($item);
                 } catch (InvalidArgumentException $e) {
                     $this->error($e->getMessage());
 
                     return self::FAILURE;
                 }
 
-                $this->line("scan {$item}  ->  total {$checkout->total()}");
+                $this->line("scan {$item}  ->  total {$this->checkout->total()}");
             }
         }
 
         return self::SUCCESS;
     }
 
-    private function checkout(): Checkout
-    {
-        $rules = (new PricingConfiguration(new PriceRuleFactory(new PriceRuleRegistry)))->resolve(config('checkout.rules'));
-
-        return new Checkout($rules);
-    }
-
-    private function interactive(Checkout $checkout): void
+    private function interactive(): void
     {
         $this->info('Type letters to scan, a blank line to stop.');
 
@@ -66,13 +56,13 @@ final class CheckoutScan extends Command
 
             foreach (str_split(str_replace(' ', '', trim($line))) as $item) {
                 try {
-                    $checkout->scan($item);
+                    $this->checkout->scan($item);
                 } catch (InvalidArgumentException $e) {
                     $this->error($e->getMessage());
                 }
             }
 
-            $this->line("total: {$checkout->total()}");
+            $this->line("total: {$this->checkout->total()}");
         }
     }
 }
