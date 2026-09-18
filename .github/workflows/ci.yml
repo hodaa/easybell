@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          coverage: pcov
+          extensions: mbstring, pdo_sqlite
+          cache: composer
+
+      - run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Style check
+        run: ./vendor/bin/pint --test
+
+      - name: Run tests
+        run: ./vendor/bin/phpunit --coverage-text
