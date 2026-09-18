@@ -59,7 +59,8 @@ Strict SOLID layering (see `AGENTS.md` for the full working contract):
 
 | Layer | Location | Responsibility |
 |---|---|---|
-| Command | `app/Console/Commands` | Composition root + CLI IO. Wires the pricing chain and calls `Checkout`. |
+| Command | `app/Console/Commands` | CLI IO. Renders scans and totals; `Checkout` is injected. |
+| Composition root | `app/Providers/AppServiceProvider.php` | Wires the pricing chain and binds `Checkout` into the container. |
 | Service | `app/Services` | Business rules. `Checkout` owns scanning and totals. |
 | Pricing | `app/Services/Pricing` | Strategy pattern: `PriceRule` interface (pricing contract), `ConfigurablePriceRule` for config-driven styles, one class per offer style, `PriceRuleRegistry` (type→class map), `PriceRuleFactory` (instantiation), `PricingConfiguration` (config→rules translation). |
 | Config | `config/checkout.php` | Tuneable business data. |
