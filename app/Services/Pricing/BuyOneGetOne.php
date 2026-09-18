@@ -29,7 +29,7 @@ final class BuyOneGetOne implements PriceRule
         return new self($offer['unit'], $offer['bundle_count'], $offer['bundle_price']);
     }
 
-    public function price(int $count): int
+    public function calculatePrice(int $count): int
     {
         $bundles = intdiv($count, $this->bundleCount);
 

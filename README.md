@@ -1,6 +1,24 @@
 # EasyBell
 
-Kata09 "Back to the Checkout" in Laravel 13 + PHP 8.5. A configurable supermarket checkout: each SKU carries a unit price and optional volume offers, all pricing math lives in services, and rules are data — no hardcoded branches.
+Kata09 "Back to the Checkout" — a supermarket checkout where every product has a price and optional bulk deals (like "3 for 130"). Prices and deals live in a config file, changing a price or adding a deal never means editing program logic.
+
+## Business assumptions
+
+- **Each product has at most one offer at a time.** Activating two offers on the same item is a configuration error — `PricingConfiguration::resolve()` fails loudly instead of guessing. No offer means unit price.
+- **Prices are integer cents.** No currency, rounding, or fractions; totals are pure integer addition.
+- **Offers are quantity-based only.** No purchase limits, customer tiers, dates, or other conditions.
+- **How you add items doesn't affect the price.** Discounts are only calculated when you call `total()` — it looks at the final count of each item, not the order you scanned them in.
+
+## Tech stack
+
+| Tool | Version / role |
+|---|---|
+| PHP | 8.5  |
+| Laravel | 13.17 — application framework |
+| PHPUnit | 12.5 — unit + feature tests, code coverage (PCOV) |
+| Laravel Pint | 1.x — code style (CI-enforced) |
+| Docker + Docker Compose | App containerization (`php:8.5-fpm`) |
+
 
 ## Running
 
@@ -9,23 +27,9 @@ Everything runs through Docker + the Makefile (no local PHP needed).
 | Command | Purpose |
 |---|---|
 | `make up` | Build and start app + db containers |
-| `make down` | Stop containers |
-| `make build` | Rebuild the app image |
-| `make logs` | Tail container logs |
-| `make shell` | Open a bash shell in the app container |
-| `make serve` | Run `php artisan serve` on :8000 (inside container) |
 | `make scan ITEMS="AAA BB D"` | Run the checkout against the given items |
 | `make install` | Run `composer install` inside the app container |
 
-Without Docker: `php artisan serve`, `./vendor/bin/phpunit`, `./vendor/bin/pint`.
-
-## Using the checkout
-
-```sh
-make scan ITEMS="AAA BB D"     # via Docker: A=100, B=45, D=15 → total 160
-php artisan checkout:scan AAA BB D      # same, without Docker
-php artisan checkout:scan DABABA        # same items, different order → 160
-```
 
 Without `ITEMS=`, the command runs interactively; a blank line stops it.
 
@@ -107,7 +111,7 @@ These are deliberate deferrals, not missing work — each is the right thing to 
 | Area | Current state | When to add |
 |---|---|---|
 | Money value object | Integer-cents everywhere; arithmetic is plain addition. | A second currency, rounding rule, or money crossing a system boundary. |
-| Multiple active offers | Fails loudly; at most one `active` offer per item. | A real requirement for discount stacking/composition. |
 | HTTP endpoints | No controllers; the kata is a service-layer exercise. | Exposing the checkout over an API. |
 | Persistence / orders | No repositories or models. | Storing scan history or order receipts. |
-# easybell
+| Time-bound offers | An `active` offer is always valid — no start/end dates. | `valid_from` / `valid_to` on an offer so a promotion auto-expires. |
+

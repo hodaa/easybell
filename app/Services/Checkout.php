@@ -28,7 +28,7 @@ final class Checkout
         $total = 0;
 
         foreach ($this->counts as $item => $count) {
-            $total += $this->pricingRules[$item]->price($count);
+            $total += $this->pricingRules[$item]->calculatePrice($count);
         }
 
         return $total;

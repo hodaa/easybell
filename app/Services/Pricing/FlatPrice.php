@@ -21,7 +21,7 @@ final class FlatPrice implements PriceRule
         return new self($offer['unit']);
     }
 
-    public function price(int $count): int
+    public function calculatePrice(int $count): int
     {
         return $count * $this->unit;
     }

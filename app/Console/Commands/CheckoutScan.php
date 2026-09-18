@@ -11,9 +11,15 @@ use InvalidArgumentException;
 
 final class CheckoutScan extends Command
 {
-    protected $signature = 'checkout:scan {items* : letters to scan, e.g. "A A A" or "AAA"}';
+    protected $signature = 'checkout:scan {items?* : letters to scan, e.g. "A A A" or "AAA"}';
 
     protected $description = 'Scan items through the checkout and print the running total';
+
+    /** @param  resource|null  $stdin */
+    public function __construct(private mixed $stdin = null)
+    {
+        parent::__construct();
+    }
 
     public function handle(): int
     {
@@ -53,7 +59,7 @@ final class CheckoutScan extends Command
     {
         $this->info('Type letters to scan, a blank line to stop.');
 
-        while (($line = fgets(STDIN)) !== false) {
+        while (($line = fgets($this->stdin ?? STDIN)) !== false) {
             if (trim($line) === '') {
                 break;
             }

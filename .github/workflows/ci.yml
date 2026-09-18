@@ -20,6 +20,9 @@ jobs:
 
       - run: composer install --no-interaction --prefer-dist --no-progress
 
+      - name: Generate app key
+        run: cp .env.example .env && php artisan key:generate
+
       - name: Style check
         run: ./vendor/bin/pint --test
 

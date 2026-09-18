@@ -175,6 +175,28 @@ class CheckoutTest extends TestCase
         ]);
     }
 
+    public function test_buyonegetone_missing_field_is_rejected(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->configuration()->resolve([
+            'X' => ['unit' => 10, 'offers' => [
+                ['type' => 'buyonegetone', 'bundle_price' => 20, 'active' => true],
+            ]],
+        ]);
+    }
+
+    public function test_zero_bundle_count_rejected_for_buyonegetone(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $this->configuration()->resolve([
+            'X' => ['unit' => 10, 'offers' => [
+                ['type' => 'buyonegetone', 'bundle_count' => 0, 'bundle_price' => 20, 'active' => true],
+            ]],
+        ]);
+    }
+
     public function test_custom_strategy_can_be_registered(): void
     {
         $double = new class implements PriceRule
@@ -184,7 +206,7 @@ class CheckoutTest extends TestCase
                 return new self;
             }
 
-            public function price(int $count): int
+            public function calculatePrice(int $count): int
             {
                 return $count * 2;
             }
